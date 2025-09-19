@@ -2,7 +2,7 @@
 
 ## 🔒 Security Features
 
-### 1. CSRF Protection
+### 1. CSRF Protection   DONE
 **Priority:** High  
 **Status:** Pending  
 **Estimated Time:** 2-3 days
@@ -46,7 +46,7 @@ request.interceptors.request.use((config) => {
 
 ---
 
-### 2. Input Validation
+### 2. Input Validation   DONE
 **Priority:** High  
 **Status:** Pending  
 **Estimated Time:** 3-4 days
