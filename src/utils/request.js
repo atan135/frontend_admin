@@ -2,6 +2,7 @@ import axios from 'axios'
 import { message } from 'ant-design-vue'
 import { logger, errorLogger } from './logger'
 import { useAuthStore } from '@/stores/auth'
+import { csrfManager } from './csrf'
 import { config } from '@/config'
 
 // Create axios instance
@@ -15,12 +16,28 @@ const request = axios.create({
 
 // Request interceptor
 request.interceptors.request.use(
-    (config) => {
+    async (config) => {
         const authStore = useAuthStore()
         const token = authStore.token
 
+        // Add JWT token for authentication
         if (token) {
             config.headers.Authorization = `Bearer ${token}`
+        }
+
+        // Add CSRF token for state-changing requests
+        const stateChangingMethods = ['post', 'put', 'patch', 'delete']
+        if (stateChangingMethods.includes(config.method?.toLowerCase())) {
+            try {
+                const csrfToken = await csrfManager.getToken()
+                if (csrfToken) {
+                    config.headers['X-CSRF-Token'] = csrfToken
+                    logger.debug(`CSRF token added to ${config.method?.toUpperCase()} request`)
+                }
+            } catch (error) {
+                logger.warn('Failed to get CSRF token:', error)
+                // Continue without CSRF token - server should handle this gracefully
+            }
         }
 
         logger.info(`API Request: ${config.method?.toUpperCase()} ${config.url}`)
@@ -38,7 +55,7 @@ request.interceptors.response.use(
         logger.info(`API Response: ${response.status} ${response.config.url}`)
         return response.data
     },
-    (error) => {
+    async (error) => {
         const authStore = useAuthStore()
 
         if (error.response) {
@@ -50,7 +67,19 @@ request.interceptors.response.use(
                     authStore.logout()
                     break
                 case 403:
-                    message.error('Forbidden, insufficient permissions')
+                    // Check if it's a CSRF token error
+                    if (data?.code === 'CSRF_TOKEN_INVALID' || data?.message?.includes('CSRF')) {
+                        logger.warn('CSRF token invalid, refreshing...')
+                        try {
+                            await csrfManager.forceRefresh()
+                            message.warning('Security token expired, please try again')
+                        } catch (refreshError) {
+                            logger.error('Failed to refresh CSRF token:', refreshError)
+                            message.error('Security error, please refresh the page')
+                        }
+                    } else {
+                        message.error('Forbidden, insufficient permissions')
+                    }
                     break
                 case 404:
                     message.error('Resource not found')

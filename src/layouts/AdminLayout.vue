@@ -51,6 +51,7 @@
         </div>
         
         <div class="header-right">
+          <CsrfStatus />
           <a-dropdown>
             <template #overlay>
               <a-menu>
@@ -87,6 +88,7 @@ import { ref, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { logger } from '@/utils/logger'
+import CsrfStatus from '@/components/CsrfStatus.vue'
 import {
   DashboardOutlined,
   UserOutlined,

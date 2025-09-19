@@ -41,5 +41,13 @@ export const authAPI = {
             method: 'post',
             data
         })
+    },
+
+    // Get CSRF token
+    getCsrfToken() {
+        return request({
+            url: '/auth/csrf-token',
+            method: 'get'
+        })
     }
 }

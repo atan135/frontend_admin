@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { authAPI } from '@/api/auth'
 import { logger } from '@/utils/logger'
 import { getClientInfo } from '@/utils/deviceInfo'
+import { csrfManager } from '@/utils/csrf'
 import router from '@/router'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -12,6 +13,16 @@ export const useAuthStore = defineStore('auth', () => {
 
     const isLoggedIn = computed(() => !!token.value)
 
+
+    // Initialize CSRF token
+    const initializeCsrfToken = async () => {
+        try {
+            await csrfManager.getToken()
+            logger.info('CSRF token initialized')
+        } catch (error) {
+            logger.warn('Failed to initialize CSRF token:', error)
+        }
+    }
 
     // Login
     const login = async (credentials) => {
@@ -45,6 +56,9 @@ export const useAuthStore = defineStore('auth', () => {
                 localStorage.setItem('token', response.token)
                 localStorage.setItem('userInfo', JSON.stringify(response.user))
 
+                // Initialize CSRF token after successful login
+                await initializeCsrfToken()
+
                 logger.info('User logged in successfully', {
                     userId: response.user.id,
                     deviceType: clientInfo.device.deviceType,
@@ -76,6 +90,10 @@ export const useAuthStore = defineStore('auth', () => {
             userInfo.value = null
             localStorage.removeItem('token')
             localStorage.removeItem('userInfo')
+
+            // Clear CSRF token on logout
+            csrfManager.clearToken()
+
             router.push('/login')
             logger.info('User logged out')
         }
@@ -87,9 +105,13 @@ export const useAuthStore = defineStore('auth', () => {
 
         try {
             const response = await authAPI.getUserInfo()
-            if (response.success) {
-                userInfo.value = response.data
-                localStorage.setItem('userInfo', JSON.stringify(response.data))
+            if (response.errcode === 0) {
+                userInfo.value = response.user
+                localStorage.setItem('userInfo', JSON.stringify(response.user))
+
+                // Initialize CSRF token for authenticated user
+                await initializeCsrfToken()
+
                 return true
             } else {
                 logout()
