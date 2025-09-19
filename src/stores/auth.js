@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authAPI } from '@/api/auth'
 import { logger } from '@/utils/logger'
+import { getClientInfo } from '@/utils/deviceInfo'
 import router from '@/router'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -11,19 +12,44 @@ export const useAuthStore = defineStore('auth', () => {
 
     const isLoggedIn = computed(() => !!token.value)
 
+
     // Login
     const login = async (credentials) => {
         try {
             loading.value = true
-            const response = await authAPI.login(credentials)
+
+            // Get comprehensive client information
+            const clientInfo = await getClientInfo()
+
+            // Prepare login data with additional information
+            const loginData = {
+                ...credentials,
+                ...clientInfo,
+                loginTime: new Date().toISOString()
+            }
+
+            logger.info('Login attempt with device info:', {
+                username: credentials.username,
+                deviceType: clientInfo.device.deviceType,
+                browser: clientInfo.device.browser,
+                os: clientInfo.device.os,
+                location: clientInfo.location.latitude ? `${clientInfo.location.latitude}, ${clientInfo.location.longitude}` : 'Unknown'
+            })
+
+            const response = await authAPI.login(loginData)
             logger.info('Login response:', response)
+
             if (response.errcode == 0) {
                 token.value = response.token
                 userInfo.value = response.user
                 localStorage.setItem('token', response.token)
                 localStorage.setItem('userInfo', JSON.stringify(response.user))
 
-                logger.info('User logged in successfully', { userId: response.user.id })
+                logger.info('User logged in successfully', {
+                    userId: response.user.id,
+                    deviceType: clientInfo.device.deviceType,
+                    location: clientInfo.location.latitude ? `${clientInfo.location.latitude}, ${clientInfo.location.longitude}` : 'Unknown'
+                })
                 return { errcode: 0, errmsg: 'Login successful' }
             } else {
                 logger.warn('Login failed', { error: response.errmsg })
@@ -80,10 +106,33 @@ export const useAuthStore = defineStore('auth', () => {
     const register = async (userData) => {
         try {
             loading.value = true
-            const response = await authAPI.register(userData)
+
+            // Get comprehensive client information
+            const clientInfo = await getClientInfo()
+
+            // Prepare registration data with additional information
+            const registrationData = {
+                ...userData,
+                ...clientInfo,
+                registrationTime: new Date().toISOString()
+            }
+
+            logger.info('Registration attempt with device info:', {
+                username: userData.username,
+                deviceType: clientInfo.device.deviceType,
+                browser: clientInfo.device.browser,
+                os: clientInfo.device.os,
+                location: clientInfo.location.latitude ? `${clientInfo.location.latitude}, ${clientInfo.location.longitude}` : 'Unknown'
+            })
+
+            const response = await authAPI.register(registrationData)
 
             if (response.errcode == 0) {
-                logger.info('User registered successfully', { username: userData.username })
+                logger.info('User registered successfully', {
+                    username: userData.username,
+                    deviceType: clientInfo.device.deviceType,
+                    location: clientInfo.location.latitude ? `${clientInfo.location.latitude}, ${clientInfo.location.longitude}` : 'Unknown'
+                })
                 return { errcode: 0, errmsg: 'Registration successful' }
             } else {
                 logger.warn('Registration failed', { error: response.errmsg })
