@@ -23,7 +23,20 @@ export const config = {
     // Logging
     LOG_LEVEL: import.meta.env.VITE_LOG_LEVEL || 'info',
     LOG_MAX_SIZE: parseInt(import.meta.env.VITE_LOG_MAX_SIZE) || 10 * 1024 * 1024, // 10MB
-    LOG_MAX_FILES: parseInt(import.meta.env.VITE_LOG_MAX_FILES) || 5
+    LOG_MAX_FILES: parseInt(import.meta.env.VITE_LOG_MAX_FILES) || 5,
+
+  // Socket.IO Configuration
+  SOCKETIO_URL: import.meta.env.VITE_SOCKETIO_URL || 'http://localhost:4000',
+  SOCKETIO_RECONNECT_ATTEMPTS: parseInt(import.meta.env.VITE_SOCKETIO_RECONNECT_ATTEMPTS) || 5,
+  SOCKETIO_RECONNECT_DELAY: parseInt(import.meta.env.VITE_SOCKETIO_RECONNECT_DELAY) || 1000,
+  SOCKETIO_RECONNECT_DELAY_MAX: parseInt(import.meta.env.VITE_SOCKETIO_RECONNECT_DELAY_MAX) || 5000,
+  SOCKETIO_TIMEOUT: parseInt(import.meta.env.VITE_SOCKETIO_TIMEOUT) || 10000,
+  
+  // Legacy WebSocket Configuration (for backward compatibility)
+  WEBSOCKET_URL: import.meta.env.VITE_WEBSOCKET_URL || 'ws://localhost:4000/ws',
+  WEBSOCKET_RECONNECT_ATTEMPTS: parseInt(import.meta.env.VITE_WEBSOCKET_RECONNECT_ATTEMPTS) || 5,
+  WEBSOCKET_RECONNECT_INTERVAL: parseInt(import.meta.env.VITE_WEBSOCKET_RECONNECT_INTERVAL) || 5000,
+  WEBSOCKET_HEARTBEAT_INTERVAL: parseInt(import.meta.env.VITE_WEBSOCKET_HEARTBEAT_INTERVAL) || 30000
 }
 
 export default config

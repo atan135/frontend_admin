@@ -52,6 +52,8 @@
         
         <div class="header-right">
           <CsrfStatus />
+          <WebSocketStatus />
+          <NotificationCenter />
           <a-dropdown>
             <template #overlay>
               <a-menu>
@@ -84,11 +86,14 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useWebSocketStore } from '@/stores/websocket'
 import { logger } from '@/utils/logger'
 import CsrfStatus from '@/components/CsrfStatus.vue'
+import WebSocketStatus from '@/components/WebSocketStatus.vue'
+import NotificationCenter from '@/components/NotificationCenter.vue'
 import {
   DashboardOutlined,
   UserOutlined,
@@ -101,6 +106,7 @@ import {
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+const wsStore = useWebSocketStore()
 
 const collapsed = ref(false)
 const selectedKeys = ref([])
@@ -119,6 +125,25 @@ watch(
   },
   { immediate: true }
 )
+
+// WebSocket initialization
+onMounted(async () => {
+  // Initialize WebSocket listeners
+  wsStore.initializeListeners()
+  
+  // Connect to WebSocket if user is authenticated
+  if (authStore.isLoggedIn) {
+    await wsStore.connect()
+  }
+})
+
+onUnmounted(() => {
+  // Cleanup WebSocket listeners
+  wsStore.cleanupListeners()
+  
+  // Disconnect WebSocket
+  wsStore.disconnect()
+})
 
 const toggleCollapsed = () => {
   collapsed.value = !collapsed.value
