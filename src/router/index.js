@@ -10,6 +10,12 @@ const routes = [
         meta: { requiresAuth: false }
     },
     {
+        path: '/register',
+        name: 'Register',
+        component: () => import('@/views/Register.vue'),
+        meta: { requiresAuth: false }
+    },
+    {
         path: '/',
         component: () => import('@/layouts/AdminLayout.vue'),
         meta: { requiresAuth: true },
@@ -55,7 +61,7 @@ router.beforeEach((to, from, next) => {
     if (to.meta.requiresAuth && !authStore.isLoggedIn) {
         logger.warn('Unauthorized access attempt', { path: to.path })
         next('/login')
-    } else if (to.path === '/login' && authStore.isLoggedIn) {
+    } else if ((to.path === '/login' || to.path === '/register') && authStore.isLoggedIn) {
         logger.info('Redirecting logged in user to dashboard')
         next('/')
     } else {

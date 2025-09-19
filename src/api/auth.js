@@ -32,5 +32,14 @@ export const authAPI = {
             url: '/auth/refresh',
             method: 'post'
         })
+    },
+
+    // Register
+    register(data) {
+        return request({
+            url: '/auth/register',
+            method: 'post',
+            data
+        })
     }
 }

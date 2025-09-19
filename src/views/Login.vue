@@ -48,6 +48,16 @@
           </a-button>
         </a-form-item>
       </a-form>
+      
+      <div class="login-footer">
+        <a-divider>Or</a-divider>
+        <div class="register-link">
+          <span>Don't have an account?</span>
+          <a-button type="link" @click="goToRegister" class="register-btn">
+            Register here
+          </a-button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -83,18 +93,23 @@ const handleLogin = async () => {
   try {
     const result = await authStore.login(formData.value)
     
-    if (result.success) {
-      message.success(result.message)
+    if (result.errcode == 0) {
+      message.success(result.errmsg)
       logger.info('User login successful', { username: formData.value.username })
       router.push('/')
     } else {
-      message.error(result.message)
-      logger.warn('Login failed', { username: formData.value.username, error: result.message })
+      message.error(result.errmsg)
+      logger.warn('Login failed', { username: formData.value.username, error: result.errmsg })
     }
   } catch (error) {
     message.error('Login failed, please try again')
     logger.error('Login error:', error)
   }
+}
+
+const goToRegister = () => {
+  logger.info('Navigate to register page')
+  router.push('/register')
 }
 </script>
 
@@ -143,5 +158,25 @@ const handleLogin = async () => {
 .form .ant-btn {
   height: 40px;
   font-size: 16px;
+}
+
+.login-footer {
+  margin-top: 24px;
+}
+
+.register-link {
+  text-align: center;
+  color: #666;
+}
+
+.register-btn {
+  padding: 0;
+  height: auto;
+  font-size: 14px;
+  color: #1890ff;
+}
+
+.register-btn:hover {
+  color: #40a9ff;
 }
 </style>
